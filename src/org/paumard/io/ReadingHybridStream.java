@@ -18,17 +18,51 @@ public class ReadingHybridStream {
     public static void main(String[] args) throws IOException {
 
         int lineOfTheFirstFable = 1;
-        int n = 1;
+        int n = 291;
 
         String pathname = "files/aesops-compressed.bin";
         File file = new File(pathname);
         int size = (int)Files.size(Paths.get(pathname));
 
         try (InputStream is = new FileInputStream(file);
-             BufferedInputStream bis = new BufferedInputStream(is);) {
+             BufferedInputStream bis = new BufferedInputStream(is)) {
 
+            bis.mark(size + 1);
 
+            InputStreamReader in = new InputStreamReader(bis);
+            LineNumberReader reader = new LineNumberReader(in);
+            reader.readLine();
+            while (reader.getLineNumber() < n + lineOfTheFirstFable) {
+                reader.readLine();
+            }
+            String fableData = reader.readLine();
+            System.out.println(fableData);
 
+            int offset = Integer.parseInt(fableData.substring(0, 7).trim());
+            int length = Integer.parseInt(fableData.substring(8, 15).trim());
+            String title = fableData.substring(16);
+            System.out.printf("%d %d %s%n", offset, length, title);
+
+            bis.reset();
+
+            int skip = (int)bis.skip(offset);
+            int totalSkip = skip;
+            while (totalSkip < offset){
+                skip = (int)bis.skip(offset - totalSkip);
+                totalSkip += skip;
+            }
+            System.out.println("skip = " + totalSkip);
+
+            byte[] bytes = new byte[length];
+            int read = bis.read(bytes, 0, length);
+
+            ByteArrayInputStream bis2 = new ByteArrayInputStream(bytes);
+            GZIPInputStream gzis = new GZIPInputStream(bis2);
+
+            byte[] bytes2 = new byte[4096];
+            int bytesDecompressed = gzis.read(bytes2);
+            String fableText = new String(bytes2, 0, bytesDecompressed);
+            System.out.println(fableText);
 
         } catch (IOException e) {
             e.printStackTrace();
