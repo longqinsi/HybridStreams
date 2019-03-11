@@ -25,53 +25,47 @@ public class WritingHybridStream {
 
         System.out.println("# fable = " + fables.size());
 
-//		Aesop's Fables
-//		291
-//		   1235     123 The Wolf and the Lamb
-//		   3271     245 The Bat and the Weasels
-//		<binary texts>
+//      Aesop's Fables
+//      291
+//         1235     123 The Wolf and the Lamb
+//         3271     245 The Bat and the Weasels
+//      <binary texts>
 
         ByteArrayOutputStream aesopBos = new ByteArrayOutputStream();
         OutputStreamWriter out = new OutputStreamWriter(aesopBos, StandardCharsets.UTF_8);
 
         PrintWriter printer = new PrintWriter(out);
-
         printer.println("Aesop's Fables");
-        printer.printf("%d\n", fables.size());
-        for (Fable fable: fables) {
-            printer.printf("%7d %7d %s\n", 0, 0, fable.getTitle());
+        printer.printf("%d%n", fables.size());
+        for (Fable fable : fables) {
+            printer.printf("%7d %7d %s%n", 0, 0, fable.getTitle());
         }
         printer.flush();
-        out.close();
         int textOffset = aesopBos.size();
+        aesopBos.close();
 
-        // System.out.println(new String(aesopBos.toByteArray()));
-
+        List<FableData> fableDatas = new ArrayList<>();
         ByteArrayOutputStream textBos = new ByteArrayOutputStream();
 
         int offset = textOffset;
-        List<FableData> fableDatas = new ArrayList<>();
-        for (Fable fable: fables) {
+        for (Fable fable : fables) {
 
             ByteArrayOutputStream fableBos = new ByteArrayOutputStream();
-
-            try (GZIPOutputStream gzipOs = new GZIPOutputStream(fableBos);) {
+            try (GZIPOutputStream gzipOs = new GZIPOutputStream(fableBos)) {
 
                 gzipOs.write(fable.getText().getBytes());
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
             int length = fableBos.size();
-            textBos.write(fableBos.toByteArray());
+            fableBos.writeTo(textBos);
 
             FableData fableData = new FableData(fable, offset, length);
             offset += length;
 
             fableDatas.add(fableData);
         }
-        textBos.close();
 
         aesopBos = new ByteArrayOutputStream();
         out = new OutputStreamWriter(aesopBos, StandardCharsets.UTF_8);
@@ -79,15 +73,16 @@ public class WritingHybridStream {
         printer = new PrintWriter(out);
 
         printer.println("Aesop's Fables");
-        printer.printf("%d\n", fables.size());
-        for (FableData fableData: fableDatas) {
-            printer.printf("%7d %7d %s\n", fableData.getOffset(), fableData.getLength(), fableData.getFable().getTitle());
+        printer.printf("%d%n", fables.size());
+        for (FableData fableData : fableDatas) {
+            printer.printf("%7d %7d %s%n", fableData.getOffset(), fableData.getLength(),
+                    fableData.getFable().getTitle());
         }
         printer.flush();
 
         System.out.println(new String(aesopBos.toByteArray()));
 
-        aesopBos.write(textBos.toByteArray());
+        textBos.writeTo(aesopBos);
         aesopBos.close();
 
         File file = new File("files/aesops-compressed.bin");

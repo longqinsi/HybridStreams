@@ -48,6 +48,9 @@ public class AesopReader {
                     title = null;
                 } else {
                     title = reader.readLine().trim();
+                    while(title.isEmpty()){
+                        title = reader.readLine().trim();
+                    }
                 }
             }
         } catch (IOException e) {
