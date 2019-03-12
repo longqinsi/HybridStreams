@@ -34,6 +34,7 @@ public class WritingHybridStream {
         ByteArrayOutputStream aesopBos = new ByteArrayOutputStream();
         OutputStreamWriter out = new OutputStreamWriter(aesopBos, StandardCharsets.UTF_8);
 
+        // The regular character stream [textBos] is decoration of the hybrid stream [aesopBos].
         PrintWriter printer = new PrintWriter(out);
         printer.println("Aesop's Fables");
         printer.printf("%d%n", fables.size());
@@ -82,8 +83,13 @@ public class WritingHybridStream {
 
         System.out.println(new String(aesopBos.toByteArray()));
 
+        // The binary stream [textBos] is written to the hybrid stream [aesopBos].
         textBos.writeTo(aesopBos);
         aesopBos.close();
+        // Jose Paumard said: "A hybrid stream is just a regular character stream,
+        // and a binary stream that are open together, on the same binary stream."
+        // According to this, a regular character stream [printer] and a binary stream
+        // [textBos] are open together, on the same binary stream [aesopBos].
 
         File file = new File("files/aesops-compressed.bin");
         try (OutputStream os = new FileOutputStream(file)) {
